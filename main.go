@@ -58,9 +58,9 @@ func main() {
 	data := MakeTreeToPrint(pkgs, fset)
 
 	for _, pkg := range data {
+		fmt.Print("\t\tFunctions:\n")
 		for _, decl := range pkg {
-			// fmt.Print("\t\t\n")
-			fmt.Printf("\t\t%s\n", decl.Name)
+			fmt.Printf("\t\t\t%s\n", decl.Name)
 		}
 	}
 }

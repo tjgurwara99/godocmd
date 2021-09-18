@@ -10,8 +10,12 @@ import (
 	"strings"
 )
 
-func GetPackages(currentPath string, fset *token.FileSet) map[string]*ast.Package {
+type FuncDecl struct {
+	Name string
+	Pos  string
+}
 
+func GetPackages(currentPath string, fset *token.FileSet) map[string]*ast.Package {
 	pkgs, err := parser.ParseDir(fset, currentPath, nil, parser.ParseComments)
 	if err != nil {
 		log.Fatal(err)
@@ -19,26 +23,28 @@ func GetPackages(currentPath string, fset *token.FileSet) map[string]*ast.Packag
 	return pkgs
 }
 
-func MakeTreeToPrint(pkgs map[string]*ast.Package) map[string]interface{} {
+func MakeTreeToPrint(pkgs map[string]*ast.Package, fset *token.FileSet) map[string]interface{} {
 	dictionary := make(map[string]interface{})
-	for name, synTree := range pkgs {
+	for name, syntaxTree := range pkgs {
 		fmt.Printf("%v\n", name)
-		ast.PackageExports(synTree)
-		var functionList []string
-		ast.Inspect(synTree, func(n ast.Node) bool {
-			var s string
+		ast.PackageExports(syntaxTree)
+		var functionList []FuncDecl
+		ast.Inspect(syntaxTree, func(n ast.Node) bool {
+			var fd FuncDecl
 			switch x := n.(type) {
 			case *ast.FuncDecl:
-				s = x.Name.Name
-				if strings.HasPrefix(s, "Test") {
+				fd.Name = x.Name.Name
+				if strings.HasPrefix(fd.Name, "Test") {
 					return true
 				}
-				functionList = append(functionList, s)
+				functionList = append(functionList, fd)
 			}
 			return true
 		})
+
 		dictionary[name] = functionList
 	}
+	// pos := fset.Position(150)
 	return dictionary
 }
 
@@ -49,7 +55,5 @@ func main() {
 	}
 	fset := token.NewFileSet()
 	pkgs := GetPackages(currentPath, fset)
-	fmt.Print(MakeTreeToPrint(pkgs))
-
-	// ast.Print(fset, pkgs["main"])
+	fmt.Print(MakeTreeToPrint(pkgs, fset))
 }

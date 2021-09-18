@@ -23,10 +23,10 @@ func GetPackages(currentPath string, fset *token.FileSet) map[string]*ast.Packag
 	return pkgs
 }
 
-func MakeTreeToPrint(pkgs map[string]*ast.Package, fset *token.FileSet) map[string]interface{} {
-	dictionary := make(map[string]interface{})
+func MakeTreeToPrint(pkgs map[string]*ast.Package, fset *token.FileSet) map[string][]FuncDecl {
+	dictionary := make(map[string][]FuncDecl)
 	for name, syntaxTree := range pkgs {
-		fmt.Printf("%v\n", name)
+		fmt.Printf("Package %v:\n\tDescription: \n", name)
 		ast.PackageExports(syntaxTree)
 		var functionList []FuncDecl
 		ast.Inspect(syntaxTree, func(n ast.Node) bool {
@@ -55,5 +55,12 @@ func main() {
 	}
 	fset := token.NewFileSet()
 	pkgs := GetPackages(currentPath, fset)
-	fmt.Print(MakeTreeToPrint(pkgs, fset))
+	data := MakeTreeToPrint(pkgs, fset)
+
+	for _, pkg := range data {
+		for _, decl := range pkg {
+			// fmt.Print("\t\t\n")
+			fmt.Printf("\t\t%s\n", decl.Name)
+		}
+	}
 }

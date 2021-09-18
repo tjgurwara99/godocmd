@@ -7,6 +7,7 @@ import (
 	"go/token"
 	"log"
 	"os"
+	"strings"
 )
 
 func GetPackages(currentPath string, fset *token.FileSet) map[string]*ast.Package {
@@ -29,6 +30,9 @@ func MakeTreeToPrint(pkgs map[string]*ast.Package) map[string]interface{} {
 			switch x := n.(type) {
 			case *ast.FuncDecl:
 				s = x.Name.Name
+				if strings.HasPrefix(s, "Test") {
+					return true
+				}
 				functionList = append(functionList, s)
 			}
 			return true

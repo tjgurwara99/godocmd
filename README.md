@@ -6,10 +6,12 @@ It is using the `go/ast` to parse the relevant material and writing them in a co
 <details>
 	<summary> <strong> Package main </strong> </summary>	
 			<details> <summary> Functions </summary>
+			<p>
 			<ol>
 				<li> MakeTreeToPrint </li>
 				<li> Scan </li>
 			</ol>
+			<p>
 			</details>
 			<details> <summary> Structs </summary>
 			<ol>

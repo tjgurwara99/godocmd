@@ -31,7 +31,6 @@ func (sds StructDecls) String() string {
 func (pkg Package) String() string {
 	str := fmt.Sprintf(`<details>
 	<summary> <strong> Package %s </strong> </summary>	
-	<br/>
 `, pkg.Name)
 	if pkg.Description != "" {
 		str += fmt.Sprintf(`<p> 

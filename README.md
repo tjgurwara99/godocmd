@@ -4,19 +4,15 @@ A simple program to write exported definitions of Go programs packages in Markdo
 It is using the `go/ast` to parse the relevant material and writing them in a concise format.
 
 <details>
-	<summary>
+	<summary> <strong> Package main </strong> </summary>	
 
-### Package main
-
-</summary>	
-
-#### Functions:
+##### Functions:
 
 1. MakeTreeToPrint
 2. Scan
 
 
-#### Structs:
+##### Structs:
 
 1. Package
 2. StructDecl

@@ -13,23 +13,27 @@ func (sd StructDecl) String() string {
 }
 
 func (fds FuncDecls) String() string {
-	str := `			<ol>
+	str := `				<ol>
+					<p>
 `
 	for _, fd := range fds {
 		str += fmt.Sprint(fd)
 	}
-	str += `			</ol>
+	str += `					</p>
+				</ol>
 `
 	return str
 }
 
 func (sds StructDecls) String() string {
-	str := `			<ol>
+	str := `				<ol>
+					<p>
 `
 	for _, sd := range sds {
 		str += fmt.Sprint(sd)
 	}
-	str += `			</ol>
+	str += `					</p>
+				</ol>
 `
 	return str
 }
@@ -37,10 +41,10 @@ func (sds StructDecls) String() string {
 func (pkg Package) String() string {
 	str := fmt.Sprintf(`<details>
 	<summary> <strong> Package %s </strong> </summary>	
+	<p>
 `, pkg.Name)
 	if pkg.Description != "" {
 		str += fmt.Sprintf(`<p> Description %s </p>
-		<br/>
 `, pkg.Description)
 	}
 	if pkg.FuncDecls != nil {
@@ -61,7 +65,7 @@ func (pkg Package) String() string {
 		</p>
 `
 	}
-	str += `
+	str += `	</p>
 </details>`
 	return str
 }

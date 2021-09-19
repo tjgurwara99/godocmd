@@ -26,11 +26,11 @@ type StructDecls []StructDecl
 type FuncDecls []FuncDecl
 
 func (fd FuncDecl) String() string {
-	return fmt.Sprintf("\t\t\t%s\n", fd.Name)
+	return fmt.Sprintf("\t\t%s\n", fd.Name)
 }
 
 func (sd StructDecl) String() string {
-	return fmt.Sprintf("\t\t\t%s\n", sd.Name)
+	return fmt.Sprintf("\t\t%s\n", sd.Name)
 }
 
 func (fds FuncDecls) String() string {
@@ -53,11 +53,11 @@ func (pkg Package) String() string {
 	var str string
 	str += fmt.Sprintf("Package %s:\n", pkg.Name)
 	if pkg.FuncDecls != nil {
-		str += "\t\tFunctions:\n"
+		str += "\tFunctions:\n"
 		str += fmt.Sprint(pkg.FuncDecls)
 	}
 	if pkg.StructDecls != nil {
-		str += "\t\tStructs:\n"
+		str += "\tStructs:\n"
 		str += fmt.Sprint(pkg.StructDecls)
 	}
 	return str
@@ -66,7 +66,7 @@ func (pkg Package) String() string {
 func (pkgs Packages) String() string {
 	var str string
 	for _, pkg := range pkgs {
-		if len(pkg.FuncDecls) != 0 && len(pkg.StructDecls) != 0 {
+		if len(pkg.FuncDecls) != 0 || len(pkg.StructDecls) != 0 {
 			str += fmt.Sprint(pkg)
 		}
 	}

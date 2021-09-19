@@ -35,7 +35,7 @@ func MakeTreeToPrint(pkgs map[string]*ast.Package, fset *token.FileSet) Packages
 					return true
 				}
 				fd.Name = x.Name.Name
-				if strings.HasPrefix(fd.Name, "Test") {
+				if strings.HasPrefix(fd.Name, "Test") || strings.HasPrefix(fd.Name, "Example") {
 					return true
 				}
 				functionList = append(functionList, fd)
@@ -72,7 +72,9 @@ If no argument is provided it looks at the current directory by default.
 		os.Exit(1)
 	}
 
-	sourcePath := flag.Arg(1)
+	sourcePath := flag.Arg(0)
+
+	fmt.Print(sourcePath)
 
 	if sourcePath == "" {
 		var err error
@@ -82,7 +84,8 @@ If no argument is provided it looks at the current directory by default.
 		}
 	}
 
-	fmt.Print(Scan(sourcePath))
+	scanned := Scan(sourcePath)
+	fmt.Print(scanned)
 
 }
 

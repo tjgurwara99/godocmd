@@ -4,7 +4,11 @@ A simple program to write exported definitions of Go programs packages in Markdo
 It is using the `go/ast` to parse the relevant material and writing them in a concise format.
 
 <details>
-	<summary> <strong> Package main </strong> </summary>	
+	<summary>
+
+# Package main
+
+</summary>	
 
 ### Functions:
 

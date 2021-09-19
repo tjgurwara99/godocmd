@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -22,12 +23,23 @@ func getAstPackage(sourcePath string, fset *token.FileSet) map[string]*ast.Packa
 }
 
 func MakeTreeToPrint(pkgs map[string]*ast.Package, fset *token.FileSet) Packages {
-	packages := make(map[string]Package)
-	for name, syntaxTree := range pkgs {
-		ast.PackageExports(syntaxTree)
+	packages := make(Packages)
+	for name, pkgSyntaxTree := range pkgs {
+		ast.PackageExports(pkgSyntaxTree)
 		var functionList FuncDecls
 		var structList StructDecls
-		ast.Inspect(syntaxTree, func(n ast.Node) bool {
+		var description string
+		for _, file := range pkgSyntaxTree.Files {
+			if file.Doc == nil {
+				continue
+			}
+			for _, doc := range file.Doc.List {
+				text := doc.Text
+				reg := regexp.MustCompile(`^\/\/ |^\/\* | \*\/$`)
+				description += reg.ReplaceAllString(text, "")
+			}
+		}
+		ast.Inspect(pkgSyntaxTree, func(n ast.Node) bool {
 			var fd FuncDecl
 			switch x := n.(type) {
 			case *ast.FuncDecl:
@@ -43,14 +55,15 @@ func MakeTreeToPrint(pkgs map[string]*ast.Package, fset *token.FileSet) Packages
 				var sd StructDecl
 				if _, ok := x.Type.(*ast.StructType); ok {
 					sd.Name = x.Name.Name
+					structList = append(structList, sd)
 				}
-				structList = append(structList, sd)
 			}
 			return true
 		})
 
 		packages[name] = Package{
 			Name:        name,
+			Description: description,
 			FuncDecls:   functionList,
 			StructDecls: structList,
 		}

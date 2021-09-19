@@ -7,13 +7,15 @@ type Packages map[string]Package
 type Package struct {
 	Name        string
 	Parent      string
+	Description string
 	StructDecls StructDecls
 	FuncDecls   FuncDecls
 }
 
 type StructDecl struct {
-	Name string
-	Pos  string
+	Name      string
+	Pos       string
+	FuncDecls FuncDecls
 }
 
 type FuncDecl struct {
@@ -52,6 +54,9 @@ func (sds StructDecls) String() string {
 func (pkg Package) String() string {
 	var str string
 	str += fmt.Sprintf("Package %s:\n", pkg.Name)
+	if pkg.Description != "" {
+		str += fmt.Sprintf("\tDescription: %s\n", pkg.Description)
+	}
 	if pkg.FuncDecls != nil {
 		str += "\tFunctions:\n"
 		str += fmt.Sprint(pkg.FuncDecls)

@@ -40,14 +40,14 @@ func (pkg Package) String() string {
 	}
 	if pkg.FuncDecls != nil {
 		str += `##### Functions:
-
+---
 `
 		str += fmt.Sprint(pkg.FuncDecls)
 		str += "\n---\n"
 	}
 	if pkg.StructDecls != nil {
 		str += `##### Structs
-
+---
 `
 		str += fmt.Sprint(pkg.StructDecls)
 		str += "\n---\n"

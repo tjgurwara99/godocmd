@@ -2,6 +2,8 @@ package main
 
 import "fmt"
 
+type Packages map[string]Package
+
 type Package struct {
 	Name        string
 	Parent      string
@@ -49,13 +51,24 @@ func (sds StructDecls) String() string {
 
 func (pkg Package) String() string {
 	var str string
+	str += fmt.Sprintf("Package %s:\n", pkg.Name)
 	if pkg.FuncDecls != nil {
-		str = "\t\tFunctions:\n"
+		str += "\t\tFunctions:\n"
 		str += fmt.Sprint(pkg.FuncDecls)
 	}
 	if pkg.StructDecls != nil {
 		str += "\t\tStructs:\n"
 		str += fmt.Sprint(pkg.StructDecls)
+	}
+	return str
+}
+
+func (pkgs Packages) String() string {
+	var str string
+	for _, pkg := range pkgs {
+		if len(pkg.FuncDecls) != 0 && len(pkg.StructDecls) != 0 {
+			str += fmt.Sprint(pkg)
+		}
 	}
 	return str
 }

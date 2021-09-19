@@ -6,8 +6,10 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -19,16 +21,14 @@ func getAstPackage(sourcePath string, fset *token.FileSet) map[string]*ast.Packa
 	return pkgs
 }
 
-func MakeTreeToPrint(pkgs map[string]*ast.Package, fset *token.FileSet) map[string]Package {
-	dictionary := make(map[string]Package)
+func MakeTreeToPrint(pkgs map[string]*ast.Package, fset *token.FileSet) Packages {
+	packages := make(map[string]Package)
 	for name, syntaxTree := range pkgs {
-		fmt.Printf("Package %v:\n\tDescription: \n", name)
 		ast.PackageExports(syntaxTree)
 		var functionList FuncDecls
 		var structList StructDecls
 		ast.Inspect(syntaxTree, func(n ast.Node) bool {
 			var fd FuncDecl
-			// var sd StructDecl
 			switch x := n.(type) {
 			case *ast.FuncDecl:
 				if x.Recv != nil {
@@ -49,20 +49,30 @@ func MakeTreeToPrint(pkgs map[string]*ast.Package, fset *token.FileSet) map[stri
 			return true
 		})
 
-		dictionary[name] = Package{
+		packages[name] = Package{
+			Name:        name,
 			FuncDecls:   functionList,
 			StructDecls: structList,
 		}
 	}
-	return dictionary
+	return packages
 }
 
 func main() {
-
-	flag.BoolVar(&recursive, "r", false, "Recursively traverse the source")
-	flag.StringVar(&sourcePath, "path", "", "Path to the source traversal, defaults to current directory")
-
 	flag.Parse()
+
+	if len(flag.Args()) > 1 {
+		w := flag.CommandLine.Output()
+
+		fmt.Fprintf(w, `Error: %s only accepts one argument.
+If no argument is provided it looks at the current directory by default.
+
+`, os.Args[0])
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	sourcePath := flag.Arg(1)
 
 	if sourcePath == "" {
 		var err error
@@ -71,11 +81,33 @@ func main() {
 			log.Fatal(err)
 		}
 	}
-	fset := token.NewFileSet()
-	pkgs := getAstPackage(sourcePath, fset)
-	data := MakeTreeToPrint(pkgs, fset)
 
-	for _, pkg := range data {
-		fmt.Print(pkg)
+	fmt.Print(Scan(sourcePath))
+
+}
+
+func scanDir(path string) Packages {
+	fset := token.NewFileSet()
+	astPkgs := getAstPackage(path, fset)
+	return MakeTreeToPrint(astPkgs, fset)
+}
+
+func Scan(sourcePath string) Packages {
+	if !recursive {
+		return scanDir(sourcePath)
 	}
+	packages := scanDir(sourcePath)
+	err := filepath.Walk(sourcePath, func(path string, info fs.FileInfo, err error) error {
+		if info.IsDir() {
+			subpackages := scanDir(path)
+			for key, value := range subpackages {
+				packages[key] = value
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	return packages
 }

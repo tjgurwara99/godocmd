@@ -5,27 +5,26 @@ It is using the `go/ast` to parse the relevant material and writing them in a co
 
 <details>
 	<summary> <strong> Package main </strong> </summary>	
-	<p>
 		<p> 
 			<details> <summary> Functions </summary>
+			<p>
 				<ol>
-					<p>
 				<li> MakeTreeToPrint </li>
 				<li> Scan </li>
-					</p>
 				</ol>
+			</p>
 			</details>
 		</p>
 		<p> 
 			<details> <summary> Structs </summary>
+			<p>
 				<ol>
-					<p>
 				<li> Package </li>
 				<li> StructDecl </li>
 				<li> FuncDecl </li>
-					</p>
 				</ol>
+			</p>
 			</details>
 		</p>
-	</p>
+
 </details>

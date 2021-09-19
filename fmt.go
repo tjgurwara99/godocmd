@@ -15,7 +15,6 @@ func (fds FuncDecls) String() string {
 	for index, fd := range fds {
 		str += fmt.Sprintf("%d. %s\n", index+1, fd)
 	}
-	str += "\n"
 	return str
 }
 
@@ -24,13 +23,14 @@ func (sds StructDecls) String() string {
 	for index, sd := range sds {
 		str += fmt.Sprintf("%d. %s\n", index+1, sd)
 	}
-	str += "\n"
 	return str
 }
 
 func (pkg Package) String() string {
 	str := fmt.Sprintf(`<details>
 	<summary> <strong> Package %s </strong> </summary>	
+
+---
 
 `, pkg.Name)
 	if pkg.Description != "" {

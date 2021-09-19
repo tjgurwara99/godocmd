@@ -6,17 +6,17 @@ It is using the `go/ast` to parse the relevant material and writing them in a co
 <details>
 	<summary>
 
-# Package main
+### Package main
 
 </summary>	
 
-### Functions:
+#### Functions:
 
 1. MakeTreeToPrint
 2. Scan
 
 
-### Structs:
+#### Structs:
 
 1. Package
 2. StructDecl

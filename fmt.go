@@ -15,7 +15,7 @@ func (fds FuncDecls) String() string {
 	for _, fd := range fds {
 		str += fmt.Sprint(fd)
 	}
-	str += fmt.Sprint("</ol>")
+	str += "</ol>"
 	return str
 }
 
@@ -24,7 +24,7 @@ func (sds StructDecls) String() string {
 	for _, sd := range sds {
 		str += fmt.Sprint(sd)
 	}
-	str += fmt.Sprint("</ol>")
+	str += "</ol>"
 	return str
 }
 

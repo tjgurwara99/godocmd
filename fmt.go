@@ -36,18 +36,21 @@ func (pkg Package) String() string {
 	if pkg.Description != "" {
 		str += fmt.Sprintf(`##### Description: %s
 `, pkg.Description)
+		str += "\n---\n"
 	}
 	if pkg.FuncDecls != nil {
 		str += `##### Functions:
 
 `
 		str += fmt.Sprint(pkg.FuncDecls)
+		str += "\n---\n"
 	}
 	if pkg.StructDecls != nil {
 		str += `##### Structs
 
 `
 		str += fmt.Sprint(pkg.StructDecls)
+		str += "\n---\n"
 	}
 	return str
 }

@@ -46,3 +46,16 @@ func (sds StructDecls) String() string {
 	}
 	return str
 }
+
+func (pkg Package) String() string {
+	var str string
+	if pkg.FuncDecls != nil {
+		str = "\t\tFunctions:\n"
+		str += fmt.Sprint(pkg.FuncDecls)
+	}
+	if pkg.StructDecls != nil {
+		str += "\t\tStructs:\n"
+		str += fmt.Sprint(pkg.StructDecls)
+	}
+	return str
+}

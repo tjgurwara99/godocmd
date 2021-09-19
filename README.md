@@ -11,9 +11,9 @@ It is using the `go/ast` to parse the relevant material and writing them in a co
 1. MakeTreeToPrint
 2. Scan
 
-
-##### Structs:
+##### Structs
 
 1. Package
 2. StructDecl
 3. FuncDecl
+

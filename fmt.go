@@ -3,69 +3,52 @@ package main
 import "fmt"
 
 func (fd FuncDecl) String() string {
-	return fmt.Sprintf(`				<li> %s </li>
-`, fd.Name)
+	return fd.Name
 }
 
 func (sd StructDecl) String() string {
-	return fmt.Sprintf(`				<li> %s </li>
-`, sd.Name)
+	return sd.Name
 }
 
 func (fds FuncDecls) String() string {
-	str := `			<p>
-				<ol>
-`
-	for _, fd := range fds {
-		str += fmt.Sprint(fd)
+	str := ""
+	for index, fd := range fds {
+		str += fmt.Sprintf("%d. %s\n", index+1, fd)
 	}
-	str += `				</ol>
-			</p>
-`
+	str += "\n"
 	return str
 }
 
 func (sds StructDecls) String() string {
-	str := `			<p>
-				<ol>
-`
-	for _, sd := range sds {
-		str += fmt.Sprint(sd)
+	str := ""
+	for index, sd := range sds {
+		str += fmt.Sprintf("%d. %s\n", index+1, sd)
 	}
-	str += `				</ol>
-			</p>
-`
+	str += "\n"
 	return str
 }
 
 func (pkg Package) String() string {
 	str := fmt.Sprintf(`<details>
 	<summary> <strong> Package %s </strong> </summary>	
+
 `, pkg.Name)
 	if pkg.Description != "" {
-		str += fmt.Sprintf(`<p> Description %s </p>
+		str += fmt.Sprintf(`##### Description: %s
 `, pkg.Description)
 	}
 	if pkg.FuncDecls != nil {
-		str += `		<p> 
-			<details> <summary> Functions </summary>
+		str += `##### Functions:
+
 `
 		str += fmt.Sprint(pkg.FuncDecls)
-		str += `			</details>
-		</p>
-`
 	}
 	if pkg.StructDecls != nil {
-		str += `		<p> 
-			<details> <summary> Structs </summary>
+		str += `##### Structs
+
 `
 		str += fmt.Sprint(pkg.StructDecls)
-		str += `			</details>
-		</p>
-`
 	}
-	str += `
-</details>`
 	return str
 }
 

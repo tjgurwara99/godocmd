@@ -52,6 +52,7 @@ func (pkg Package) String() string {
 		str += fmt.Sprint(pkg.StructDecls)
 		str += "\n---\n"
 	}
+	str += "</details>"
 	return str
 }
 

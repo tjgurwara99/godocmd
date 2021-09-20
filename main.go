@@ -7,11 +7,14 @@ import (
 	"go/parser"
 	"go/token"
 	"io/fs"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"golang.org/x/mod/modfile"
 )
 
 func getAstPackage(sourcePath string, fset *token.FileSet) map[string]*ast.Package {
@@ -22,12 +25,12 @@ func getAstPackage(sourcePath string, fset *token.FileSet) map[string]*ast.Packa
 	return pkgs
 }
 
-func MakeTreeToPrint(pkgs map[string]*ast.Package, fset *token.FileSet) Packages {
+func GetCustomSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Packages {
 	packages := make(Packages)
 	for name, pkgSyntaxTree := range pkgs {
 		ast.PackageExports(pkgSyntaxTree)
 		var functionList FuncDecls
-		var structList StructDecls
+		structList := make(StructDecls)
 		var description string
 		for _, file := range pkgSyntaxTree.Files {
 			if file.Doc == nil {
@@ -35,7 +38,7 @@ func MakeTreeToPrint(pkgs map[string]*ast.Package, fset *token.FileSet) Packages
 			}
 			for _, doc := range file.Doc.List {
 				text := doc.Text
-				reg := regexp.MustCompile(`^\/\/ |^\/\* | \*\/$`)
+				reg := regexp.MustCompile(`^\/\/ |^\/\* |^\/\/| \*\/$|\*\/$`)
 				description += reg.ReplaceAllString(text, "")
 			}
 		}
@@ -43,19 +46,30 @@ func MakeTreeToPrint(pkgs map[string]*ast.Package, fset *token.FileSet) Packages
 			var fd FuncDecl
 			switch x := n.(type) {
 			case *ast.FuncDecl:
+				fd.Name = x.Name.Name
 				if x.Recv != nil {
+					if s, ok := x.Recv.List[0].Type.(*ast.Ident); ok {
+						if val, ok2 := structList[s.Name]; ok2 {
+							val.FuncDecls = append(structList[s.Name].FuncDecls, fd)
+							return true
+						}
+						structList[s.Name] = StructDecl{Name: s.Name, FuncDecls: FuncDecls{fd}}
+					}
 					return true
 				}
-				fd.Name = x.Name.Name
-				if strings.HasPrefix(fd.Name, "Test") || strings.HasPrefix(fd.Name, "Example") {
+				// ignore Test, Example and Benchmark prefixed functions
+				if strings.HasPrefix(fd.Name, "Test") || strings.HasPrefix(fd.Name, "Example") || strings.HasPrefix(fd.Name, "Benchmark") {
 					return true
 				}
 				functionList = append(functionList, fd)
 			case *ast.TypeSpec:
 				var sd StructDecl
 				if _, ok := x.Type.(*ast.StructType); ok {
+					if _, ok := structList[sd.Name]; ok {
+						return true
+					}
 					sd.Name = x.Name.Name
-					structList = append(structList, sd)
+					structList[sd.Name] = sd
 				}
 			}
 			return true
@@ -78,7 +92,7 @@ func main() {
 		w := flag.CommandLine.Output()
 
 		fmt.Fprintf(w, `Error: %s only accepts one argument.
-If no argument is provided it looks at the current directory by default.
+If no argument is provided godocmd will look at the current directory by default.
 
 `, os.Args[0])
 		flag.Usage()
@@ -87,14 +101,22 @@ If no argument is provided it looks at the current directory by default.
 
 	sourcePath := flag.Arg(0)
 
-	fmt.Print(sourcePath)
-
 	if sourcePath == "" {
 		var err error
 		sourcePath, err = os.Getwd()
 		if err != nil {
 			log.Fatal(err)
 		}
+	}
+
+	if module == "" {
+		modfileData, err := ioutil.ReadFile(sourcePath + "/go.mod")
+		if err != nil {
+			log.Print("Unable to read go.mod file in the source directory provided. Please use -module flag to specify module path, example godocmd -module github.com/tjgurwara99/godocmd")
+			flag.Usage()
+			log.Fatal()
+		}
+		module = modfile.ModulePath(modfileData)
 	}
 
 	scanned := Scan(sourcePath)
@@ -105,7 +127,7 @@ If no argument is provided it looks at the current directory by default.
 func scanDir(path string) Packages {
 	fset := token.NewFileSet()
 	astPkgs := getAstPackage(path, fset)
-	return MakeTreeToPrint(astPkgs, fset)
+	return GetCustomSyntaxTree(astPkgs, fset)
 }
 
 func Scan(sourcePath string) Packages {

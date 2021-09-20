@@ -21,6 +21,6 @@ type FuncDecl struct {
 	Pos  string
 }
 
-type StructDecls []StructDecl
+type StructDecls map[string]StructDecl
 
 type FuncDecls []FuncDecl

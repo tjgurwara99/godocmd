@@ -3,11 +3,11 @@ package main
 import "fmt"
 
 func (fd FuncDecl) String() string {
-	return fd.Name
+	return fmt.Sprintf("`%s`", fd.Name)
 }
 
 func (sd StructDecl) String() string {
-	return sd.Name
+	return fmt.Sprintf("`%s`", sd.Name)
 }
 
 func (fds FuncDecls) String() string {
@@ -20,8 +20,17 @@ func (fds FuncDecls) String() string {
 
 func (sds StructDecls) String() string {
 	str := ""
-	for index, sd := range sds {
-		str += fmt.Sprintf("%d. %s\n", index+1, sd)
+	index := 1
+	for _, sd := range sds {
+		str += fmt.Sprintf("%d. %s\n", index, sd)
+
+		if sd.FuncDecls != nil {
+			str += "\tMethods:\n"
+		}
+		for i, f := range sd.FuncDecls {
+			str += fmt.Sprintf("\t%d. %s\n", i+1, f)
+		}
+		index++
 	}
 	return str
 }
@@ -45,7 +54,7 @@ func (pkg Package) String() string {
 		str += fmt.Sprint(pkg.FuncDecls)
 		str += "\n---\n"
 	}
-	if pkg.StructDecls != nil {
+	if len(pkg.StructDecls) != 0 {
 		str += `##### Structs
 
 `

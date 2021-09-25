@@ -1,6 +1,13 @@
 package main
 
+import "go/token"
+
 type Packages map[string]Package
+
+type Pos struct {
+	FileName string
+	Line     int
+}
 
 type Package struct {
 	Name        string
@@ -12,13 +19,15 @@ type Package struct {
 
 type StructDecl struct {
 	Name      string
-	Pos       string
+	Pos       Pos
+	Fset      *token.FileSet
 	FuncDecls FuncDecls
 }
 
 type FuncDecl struct {
 	Name string
-	Pos  string
+	Pos  Pos
+	Fset *token.FileSet
 }
 
 type StructDecls map[string]StructDecl

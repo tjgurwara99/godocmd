@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func (fd FuncDecl) String() string {
 	return fmt.Sprintf("`%s`", fd.Name)
@@ -13,7 +16,7 @@ func (sd StructDecl) String() string {
 func (fds FuncDecls) String() string {
 	str := ""
 	for index, fd := range fds {
-		str += fmt.Sprintf("%d. %s\n", index+1, fd)
+		str += fmt.Sprintf("%d. [%s](%s)\n", index+1, fd, fd.Pos.String())
 	}
 	return str
 }
@@ -22,13 +25,13 @@ func (sds StructDecls) String() string {
 	str := ""
 	index := 1
 	for _, sd := range sds {
-		str += fmt.Sprintf("%d. %s\n", index, sd)
+		str += fmt.Sprintf("%d. [%s](%s)\n", index, sd, sd.Pos.String())
 
 		if sd.FuncDecls != nil {
 			str += "\tMethods:\n"
 		}
 		for i, f := range sd.FuncDecls {
-			str += fmt.Sprintf("\t%d. %s\n", i+1, f)
+			str += fmt.Sprintf("\t%d. [%s](%s)\n", i+1, f, f.Pos.String())
 		}
 		index++
 	}
@@ -72,5 +75,10 @@ func (pkgs Packages) String() string {
 			str += fmt.Sprint(pkg)
 		}
 	}
+	return str
+}
+
+func (p *Pos) String() string {
+	str := fmt.Sprintf("%s#L%d", strings.Replace(p.FileName, sourcePath, ".", 1), p.Line)
 	return str
 }

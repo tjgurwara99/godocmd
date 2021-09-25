@@ -25,7 +25,7 @@ func getAstPackage(sourcePath string, fset *token.FileSet) map[string]*ast.Packa
 	return pkgs
 }
 
-func GetCustomSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Packages {
+func GetMappedSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Packages {
 	packages := make(Packages)
 	for name, pkgSyntaxTree := range pkgs {
 		ast.PackageExports(pkgSyntaxTree)
@@ -47,13 +47,24 @@ func GetCustomSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Pack
 			switch x := n.(type) {
 			case *ast.FuncDecl:
 				fd.Name = x.Name.Name
+				fd.Pos = Pos{
+					Line:     fset.Position(x.Pos()).Line,
+					FileName: fset.Position(x.Pos()).Filename,
+				}
 				if x.Recv != nil {
 					if s, ok := x.Recv.List[0].Type.(*ast.Ident); ok {
 						if val, ok2 := structList[s.Name]; ok2 {
 							val.FuncDecls = append(structList[s.Name].FuncDecls, fd)
 							return true
 						}
-						structList[s.Name] = StructDecl{Name: s.Name, FuncDecls: FuncDecls{fd}}
+						structList[s.Name] = StructDecl{
+							Name:      s.Name,
+							FuncDecls: FuncDecls{fd},
+							Pos: Pos{
+								Line:     fset.Position(s.NamePos).Line,
+								FileName: fset.Position(s.NamePos).Filename,
+							},
+						}
 					}
 					return true
 				}
@@ -64,11 +75,15 @@ func GetCustomSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Pack
 				functionList = append(functionList, fd)
 			case *ast.TypeSpec:
 				var sd StructDecl
+				sd.Name = x.Name.Name
+				sd.Pos = Pos{
+					Line:     fset.Position(x.Pos()).Line,
+					FileName: fset.Position(x.Pos()).Filename,
+				}
 				if _, ok := x.Type.(*ast.StructType); ok {
 					if _, ok := structList[sd.Name]; ok {
 						return true
 					}
-					sd.Name = x.Name.Name
 					structList[sd.Name] = sd
 				}
 			}
@@ -99,7 +114,7 @@ If no argument is provided godocmd will look at the current directory by default
 		os.Exit(1)
 	}
 
-	sourcePath := flag.Arg(0)
+	sourcePath = flag.Arg(0)
 
 	if sourcePath == "" {
 		var err error
@@ -127,7 +142,7 @@ If no argument is provided godocmd will look at the current directory by default
 func scanDir(path string) Packages {
 	fset := token.NewFileSet()
 	astPkgs := getAstPackage(path, fset)
-	return GetCustomSyntaxTree(astPkgs, fset)
+	return GetMappedSyntaxTree(astPkgs, fset)
 }
 
 func Scan(sourcePath string) Packages {

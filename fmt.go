@@ -26,7 +26,7 @@ func (sds StructDecls) String() string {
 	str := ""
 	index := 1
 	for _, sd := range sds {
-		str += fmt.Sprintf("%d. [%s](%s)\n", index, sd, sd.Pos.String())
+		str += fmt.Sprintf("%d. [%s](%s)\n\n", index, sd, sd.Pos.String())
 
 		if sd.FuncDecls != nil {
 			str += "\tMethods:\n"

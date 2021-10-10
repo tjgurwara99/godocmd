@@ -79,6 +79,7 @@ func GetMappedSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Pack
 				if _, ok := x.Type.(*ast.StructType); ok {
 					if x, ok := structList[sd.Name]; ok {
 						x.Pos = sd.Pos
+						structList[sd.Name] = x
 						return true
 					}
 					structList[sd.Name] = sd

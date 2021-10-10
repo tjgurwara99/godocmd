@@ -39,7 +39,7 @@ func GetMappedSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Pack
 			for _, doc := range file.Doc.List {
 				text := doc.Text
 				reg := regexp.MustCompile(`^\/\/ |^\/\* |^\/\/| \*\/$|\*\/$`)
-				description += reg.ReplaceAllString(text, "")
+				description += reg.ReplaceAllString(text, " ")
 			}
 		}
 		ast.Inspect(pkgSyntaxTree, func(n ast.Node) bool {
@@ -60,10 +60,6 @@ func GetMappedSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Pack
 						structList[s.Name] = StructDecl{
 							Name:      s.Name,
 							FuncDecls: FuncDecls{fd},
-							Pos: Pos{
-								Line:     fset.Position(s.NamePos).Line,
-								FileName: fset.Position(s.NamePos).Filename,
-							},
 						}
 					}
 					return true
@@ -81,7 +77,8 @@ func GetMappedSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Pack
 					FileName: fset.Position(x.Pos()).Filename,
 				}
 				if _, ok := x.Type.(*ast.StructType); ok {
-					if _, ok := structList[sd.Name]; ok {
+					if x, ok := structList[sd.Name]; ok {
+						x.Pos = sd.Pos
 						return true
 					}
 					structList[sd.Name] = sd

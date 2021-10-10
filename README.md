@@ -13,30 +13,30 @@ It is using the `go/ast` to parse the relevant material and writing them in a co
 ##### Functions:
 
 1. [`GetMappedSyntaxTree`](./main.go#L28)
-2. [`Scan`](./main.go#L148)
+2. [`Scan`](./main.go#L145)
 
 ---
 ##### Structs
 
 1. [`Pos`](./type.go#L7)
-2. [`FuncDecl`](./fmt.go#L8)
+2. [`FuncDecl`](#L0)
 	Methods:
-	1. [`String`](./fmt.go#L8)
-3. [`StructDecl`](./fmt.go#L12)
+	1. [`String`](./fmt.go#L9)
+3. [`StructDecl`](#L0)
 	Methods:
-	1. [`String`](./fmt.go#L12)
-4. [`FuncDecls`](./fmt.go#L16)
+	1. [`String`](./fmt.go#L13)
+4. [`FuncDecls`](#L0)
 	Methods:
-	1. [`String`](./fmt.go#L16)
-5. [`StructDecls`](./fmt.go#L24)
+	1. [`String`](./fmt.go#L17)
+5. [`StructDecls`](#L0)
 	Methods:
-	1. [`String`](./fmt.go#L24)
-6. [`Package`](./fmt.go#L41)
+	1. [`String`](./fmt.go#L25)
+6. [`Package`](#L0)
 	Methods:
-	1. [`String`](./fmt.go#L41)
-7. [`Packages`](./fmt.go#L71)
+	1. [`String`](./fmt.go#L42)
+7. [`Packages`](#L0)
 	Methods:
-	1. [`String`](./fmt.go#L71)
+	1. [`String`](./fmt.go#L72)
 
 ---
 </details>

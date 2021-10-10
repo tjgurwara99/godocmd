@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -70,7 +71,12 @@ func (pkg Package) String() string {
 
 func (pkgs Packages) String() string {
 	var str string
+	var pkgSlice []Package
 	for _, pkg := range pkgs {
+		pkgSlice = append(pkgSlice, pkg)
+	}
+	sort.Slice(pkgSlice, func(i, j int) bool { return pkgSlice[i].Name < pkgSlice[j].Name })
+	for _, pkg := range pkgSlice {
 		if len(pkg.FuncDecls) != 0 || len(pkg.StructDecls) != 0 {
 			str += fmt.Sprint(pkg)
 		}

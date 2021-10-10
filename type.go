@@ -18,16 +18,18 @@ type Package struct {
 }
 
 type StructDecl struct {
-	Name      string
-	Pos       Pos
-	Fset      *token.FileSet
-	FuncDecls FuncDecls
+	Name        string
+	Pos         Pos
+	Fset        *token.FileSet
+	FuncDecls   FuncDecls
+	Description string
 }
 
 type FuncDecl struct {
-	Name string
-	Pos  Pos
-	Fset *token.FileSet
+	Name        string
+	Pos         Pos
+	Fset        *token.FileSet
+	Description string
 }
 
 type StructDecls map[string]StructDecl

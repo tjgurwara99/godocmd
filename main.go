@@ -51,6 +51,18 @@ func GetMappedSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Pack
 					Line:     fset.Position(x.Pos()).Line,
 					FileName: fset.Position(x.Pos()).Filename,
 				}
+				var description string
+				if x.Doc != nil {
+					for _, doc := range x.Doc.List {
+						text := doc.Text
+						reg := regexp.MustCompile(`^\/\/|^\/\*|^\/\/|\*\/$|\*\/$`)
+						description += reg.ReplaceAllString(text, "")
+					}
+				}
+				if description == "" {
+					description = "No description provided."
+				}
+				fd.Description = description
 				if x.Recv != nil {
 					if s, ok := x.Recv.List[0].Type.(*ast.Ident); ok {
 						if val, ok2 := structList[s.Name]; ok2 {
@@ -76,9 +88,22 @@ func GetMappedSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Pack
 					Line:     fset.Position(x.Pos()).Line,
 					FileName: fset.Position(x.Pos()).Filename,
 				}
+				var description string
+				if x.Doc != nil {
+					for _, doc := range x.Doc.List {
+						text := doc.Text
+						reg := regexp.MustCompile(`^\/\/|^\/\*|^\/\/|\*\/$|\*\/$`)
+						description += reg.ReplaceAllString(text, "")
+					}
+				}
+				if description == "" {
+					description = "No description provided."
+				}
+				sd.Description = description
 				if _, ok := x.Type.(*ast.StructType); ok {
 					if x, ok := structList[sd.Name]; ok {
 						x.Pos = sd.Pos
+						x.Description = sd.Description
 						structList[sd.Name] = x
 						return true
 					}
@@ -87,6 +112,7 @@ func GetMappedSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Pack
 				if _, ok := x.Type.(*ast.MapType); ok {
 					if x, ok := structList[sd.Name]; ok {
 						x.Pos = sd.Pos
+						x.Description = sd.Description
 						structList[sd.Name] = x
 						return true
 					}
@@ -95,6 +121,7 @@ func GetMappedSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Pack
 				if _, ok := x.Type.(*ast.ArrayType); ok {
 					if x, ok := structList[sd.Name]; ok {
 						x.Pos = sd.Pos
+						x.Description = sd.Description
 						structList[sd.Name] = x
 						return true
 					}

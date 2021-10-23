@@ -17,7 +17,7 @@ func (sd StructDecl) String() string {
 func (fds FuncDecls) String() string {
 	str := ""
 	for index, fd := range fds {
-		str += fmt.Sprintf("%d. [%s](%s). Description: %s\n", index+1, fd, fd.Pos.String(), fd.Description)
+		str += fmt.Sprintf("%d. [%s](%s): %s\n", index+1, fd, fd.Pos.String(), fd.Description)
 	}
 	return str
 }
@@ -26,13 +26,13 @@ func (sds StructDecls) String() string {
 	str := ""
 	index := 1
 	for _, sd := range sds {
-		str += fmt.Sprintf("%d. [%s](%s). Description: %s\n\n", index, sd, sd.Pos.String(), sd.Description)
+		str += fmt.Sprintf("%d. [%s](%s): %s\n\n", index, sd, sd.Pos.String(), sd.Description)
 
 		if sd.FuncDecls != nil {
 			str += "\tMethods:\n"
 		}
 		for i, f := range sd.FuncDecls {
-			str += fmt.Sprintf("\t%d. [%s](%s). Description: %s\n", i+1, f, f.Pos.String(), f.Description)
+			str += fmt.Sprintf("\t%d. [%s](%s): %s\n", i+1, f, f.Pos.String(), f.Description)
 		}
 		index++
 	}
@@ -59,7 +59,7 @@ func (pkg Package) String() string {
 		str += "\n---\n"
 	}
 	if len(pkg.StructDecls) != 0 {
-		str += `##### Structs
+		str += `##### Types
 
 `
 		str += fmt.Sprint(pkg.StructDecls)

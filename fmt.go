@@ -47,7 +47,7 @@ func (pkg Package) String() string {
 
 `, pkg.Name)
 	if pkg.Description != "" {
-		str += fmt.Sprintf(`##### Description: %s
+		str += fmt.Sprintf(`##### %s
 `, pkg.Description)
 		str += "\n---\n"
 	}

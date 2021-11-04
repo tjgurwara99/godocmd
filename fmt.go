@@ -25,12 +25,18 @@ func (fds FuncDecls) String() string {
 func (sds StructDecls) String() string {
 	str := ""
 	index := 1
+	var structSlice []StructDecl
 	for _, sd := range sds {
+		structSlice = append(structSlice, sd)
+	}
+	sort.Slice(structSlice, func(i, j int) bool { return structSlice[i].Name < structSlice[j].Name })
+	for _, sd := range structSlice {
 		str += fmt.Sprintf("%d. [%s](%s): %s\n\n", index, sd, sd.Pos.String(), sd.Description)
 
 		if sd.FuncDecls != nil {
 			str += "\tMethods:\n"
 		}
+		sort.Slice(sd.FuncDecls, func(i, j int) bool { return sd.FuncDecls[i].Name < sd.FuncDecls[j].Name })
 		for i, f := range sd.FuncDecls {
 			str += fmt.Sprintf("\t%d. [%s](%s): %s\n", i+1, f, f.Pos.String(), f.Description)
 		}
@@ -51,6 +57,7 @@ func (pkg Package) String() string {
 `, pkg.Description)
 		str += "\n---\n"
 	}
+	sort.Slice(pkg.FuncDecls, func(i, j int) bool { return pkg.FuncDecls[i].Name < pkg.FuncDecls[j].Name })
 	if pkg.FuncDecls != nil {
 		str += `##### Functions:
 

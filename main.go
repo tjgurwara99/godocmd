@@ -176,7 +176,28 @@ If no argument is provided godocmd will look at the current directory by default
 	}
 
 	scanned := Scan(sourcePath)
-	fmt.Print(scanned)
+	if write {
+		file, err := os.OpenFile(fileToWrite, os.O_CREATE|os.O_RDONLY, 0666)
+		if err != nil {
+			log.Fatal(err)
+		}
+		lines, err := prepareFileInjection(file, scanned)
+		file.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+		file, err = os.OpenFile(fileToWrite, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+		err = writeToFile(file, lines)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		fmt.Print(scanned)
+	}
 
 }
 

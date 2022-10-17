@@ -3,226 +3,98 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go/ast"
-	"go/parser"
+	"go/doc/comment"
 	"go/token"
-	"io/fs"
-	"io/ioutil"
-	"log"
+	"io"
 	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
 
-	"golang.org/x/mod/modfile"
+	"golang.org/x/tools/go/packages"
 )
 
-func getAstPackage(sourcePath string, fset *token.FileSet) map[string]*ast.Package {
-	pkgs, err := parser.ParseDir(fset, sourcePath, nil, parser.ParseComments)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return pkgs
-}
-
-func GetMappedSyntaxTree(pkgs map[string]*ast.Package, fset *token.FileSet) Packages {
-	packages := make(Packages)
-	for name, pkgSyntaxTree := range pkgs {
-		ast.PackageExports(pkgSyntaxTree)
-		var functionList FuncDecls
-		structList := make(StructDecls)
-		var description string
-		for _, file := range pkgSyntaxTree.Files {
-			if file.Doc == nil {
-				continue
-			}
-			for _, doc := range file.Doc.List {
-				text := doc.Text
-				reg := regexp.MustCompile(`^\/\/ |^\/\* |^\/\/| \*\/$|\*\/$`)
-				description += reg.ReplaceAllString(text, " ")
-			}
-		}
-		ast.Inspect(pkgSyntaxTree, func(n ast.Node) bool {
-			var fd FuncDecl
-			switch x := n.(type) {
-			case *ast.FuncDecl:
-				fd.Name = x.Name.Name
-				fd.Pos = Pos{
-					Line:     fset.Position(x.Pos()).Line,
-					FileName: fset.Position(x.Pos()).Filename,
-				}
-				var description string
-				if x.Doc != nil {
-					for _, doc := range x.Doc.List {
-						text := doc.Text
-						reg := regexp.MustCompile(`^\/\/|^\/\*|^\/\/|\*\/$|\*\/$`)
-						description += reg.ReplaceAllString(text, "")
-					}
-				}
-				if description == "" {
-					description = "No description provided."
-				}
-				fd.Description = description
-				if x.Recv != nil {
-					if s, ok := x.Recv.List[0].Type.(*ast.Ident); ok {
-						if val, ok2 := structList[s.Name]; ok2 {
-							val.FuncDecls = append(structList[s.Name].FuncDecls, fd)
-							return true
-						}
-						structList[s.Name] = StructDecl{
-							Name:      s.Name,
-							FuncDecls: FuncDecls{fd},
-						}
-					}
-					return true
-				}
-				// ignore Test, Example and Benchmark prefixed functions
-				if strings.HasPrefix(fd.Name, "Test") || strings.HasPrefix(fd.Name, "Example") || strings.HasPrefix(fd.Name, "Benchmark") {
-					return true
-				}
-				functionList = append(functionList, fd)
-			case *ast.TypeSpec:
-				var sd StructDecl
-				sd.Name = x.Name.Name
-				sd.Pos = Pos{
-					Line:     fset.Position(x.Pos()).Line,
-					FileName: fset.Position(x.Pos()).Filename,
-				}
-				var description string
-				if x.Doc != nil {
-					for _, doc := range x.Doc.List {
-						text := doc.Text
-						reg := regexp.MustCompile(`^\/\/|^\/\*|^\/\/|\*\/$|\*\/$`)
-						description += reg.ReplaceAllString(text, "")
-					}
-				}
-				if description == "" {
-					description = "No description provided."
-				}
-				sd.Description = description
-				if _, ok := x.Type.(*ast.StructType); ok {
-					if x, ok := structList[sd.Name]; ok {
-						x.Pos = sd.Pos
-						x.Description = sd.Description
-						structList[sd.Name] = x
-						return true
-					}
-					structList[sd.Name] = sd
-				}
-				if _, ok := x.Type.(*ast.MapType); ok {
-					if x, ok := structList[sd.Name]; ok {
-						x.Pos = sd.Pos
-						x.Description = sd.Description
-						structList[sd.Name] = x
-						return true
-					}
-					structList[sd.Name] = sd
-				}
-				if _, ok := x.Type.(*ast.ArrayType); ok {
-					if x, ok := structList[sd.Name]; ok {
-						x.Pos = sd.Pos
-						x.Description = sd.Description
-						structList[sd.Name] = x
-						return true
-					}
-					structList[sd.Name] = sd
-				}
-			}
-			return true
-		})
-
-		packages[name] = Package{
-			Name:        name,
-			Description: description,
-			FuncDecls:   functionList,
-			StructDecls: structList,
-		}
-	}
-	return packages
-}
+var fset = token.NewFileSet()
 
 func main() {
+	const mode packages.LoadMode = packages.NeedModule |
+		packages.NeedName |
+		packages.NeedTypes |
+		packages.NeedSyntax |
+		packages.NeedTypesInfo
+
 	flag.Parse()
-
-	if len(flag.Args()) > 1 {
-		w := flag.CommandLine.Output()
-
-		fmt.Fprintf(w, `Error: %s only accepts one argument.
-If no argument is provided godocmd will look at the current directory by default.
-
-`, os.Args[0])
-		flag.Usage()
+	cfg := &packages.Config{Fset: fset, Mode: mode}
+	pkgs, err := packages.Load(cfg, flag.Args()...)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "load: %v\n", err)
+		os.Exit(1)
+	}
+	if packages.PrintErrors(pkgs) > 0 {
 		os.Exit(1)
 	}
 
-	sourcePath = flag.Arg(0)
+	pathTree := NewDocTree(pkgs)
+	FPrint(os.Stdout, pathTree, "", "")
+}
 
-	if sourcePath == "" {
-		var err error
-		sourcePath, err = os.Getwd()
-		if err != nil {
-			log.Fatal(err)
-		}
+func FPrint(w io.Writer, tree Tree, indent, prefix string) {
+	if prefix == "" {
+		prefix = "##"
 	}
-
-	if module == "" {
-		modfileData, err := ioutil.ReadFile(sourcePath + "/go.mod")
-		if err != nil {
-			log.Print("Unable to read go.mod file in the source directory provided. Please use -module flag to specify module path, example godocmd -module github.com/tjgurwara99/godocmd")
-			flag.Usage()
-			log.Fatal()
-		}
-		module = modfile.ModulePath(modfileData)
+	for _, pkg := range tree {
+		printPkgDoc(pkg, prefix, w)
+		fmt.Fprintln(w, "\nSubpackages:")
+		newWriter := NewWriter(w, indent+"\t")
+		FPrint(newWriter, pkg.SubPackages, indent+"\t", prefix+"#")
 	}
+}
 
-	scanned := Scan(sourcePath)
-	if write {
-		file, err := os.OpenFile(fileToWrite, os.O_CREATE|os.O_RDONLY, 0666)
-		if err != nil {
-			log.Fatal(err)
-		}
-		lines, err := prepareFileInjection(file, scanned)
-		file.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-		file, err = os.OpenFile(fileToWrite, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer file.Close()
-		err = writeToFile(file, lines)
-		if err != nil {
-			log.Fatal(err)
+func printPkgDoc(pkg *Node, prefix string, w io.Writer) {
+	parser := pkg.Doc.Parser()
+	var pkgComment string
+	if pkg.Doc != nil {
+		pkgComment = fmt.Sprintf("%s: %s", pkg.Doc.Name, pkg.Doc.Doc)
+		if pkg.Doc.Doc == "" {
+			pkgComment = fmt.Sprintf("%s: No package documentation provided.", pkg.Doc.Name)
 		}
 	} else {
-		fmt.Print(scanned)
+		pkgComment = fmt.Sprintf("%s: No package documentation provided.", pkg.Name)
+	}
+	doc := parser.Parse(pkgComment)
+	printer := comment.Printer{}
+	printer.TextPrefix = prefix + " "
+	printer.TextCodePrefix = "```"
+	something := printer.Text(doc)
+	w.Write([]byte(something))
+
+	if pkg.Doc == nil {
+		return
 	}
 
-}
-
-func scanDir(path string) Packages {
-	fset := token.NewFileSet()
-	astPkgs := getAstPackage(path, fset)
-	return GetMappedSyntaxTree(astPkgs, fset)
-}
-
-func Scan(sourcePath string) Packages {
-	if !recursive {
-		return scanDir(sourcePath)
-	}
-	packages := scanDir(sourcePath)
-	err := filepath.Walk(sourcePath, func(path string, info fs.FileInfo, err error) error {
-		if info.IsDir() {
-			subpackages := scanDir(path)
-			for key, value := range subpackages {
-				packages[key] = value
+	if len(pkg.Doc.Funcs) > 0 {
+		w.Write(printer.Text(parser.Parse("Functions:")))
+		printer.TextPrefix += " "
+		for _, fn := range pkg.Doc.Funcs {
+			var fnCmt string
+			if fn.Doc == "" {
+				fn.Doc = "No function documentation provided."
 			}
+			fnCmt = fmt.Sprintf("%s: %s", fn.Name, fn.Doc)
+			fnDoc := parser.Parse(fnCmt)
+			fDoc := printer.Markdown(fnDoc)
+			w.Write([]byte(fDoc))
 		}
-		return nil
-	})
-	if err != nil {
-		log.Fatal(err)
 	}
-	return packages
+	if len(pkg.Doc.Consts) > 0 {
+		printer.TextPrefix = printer.TextPrefix[:len(printer.TextPrefix)-1]
+		w.Write([]byte(printer.Text(parser.Parse("Types:"))))
+		printer.TextPrefix += " "
+		for _, t := range pkg.Doc.Types {
+			var tCmt string
+			if t.Doc == "" {
+				t.Doc = "No type documentation provided."
+			}
+			tCmt = fmt.Sprintf("%s: %s", t.Name, t.Doc)
+			tDoc := parser.Parse(tCmt)
+			w.Write(printer.Text(tDoc))
+		}
+	}
 }
